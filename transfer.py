@@ -18,14 +18,18 @@ optimizer=torch.optim.Adam(model.parameters(), lr=0.001)
 
 
 for epoch in range(n_epochs):
-    correct=0
+    train=0
+    test=0
     print("Epoch: ", epoch)
-    for x,y in dataloaders['train']:
+    for x,_,y in dataloaders['train']:
         out=classifier(x)
         l=loss(out, y)
         optimizer.zero_grad()
         l.backward()
         optimizer.step()
-        correct+=(torch.argmax(out,axis=1)==y).sum()
-    print("Accuracy: ", correct/len(dataloaders['train'].dataset))
-
+        train+=(torch.argmax(out,axis=1)==y).sum()
+    for x,_,y in dataloaders['test']:
+        out=classifier(x)
+        test+=(torch.argmax(out,axis=1)==y).sum()
+    print("Train accuracy: ", train/len(dataloaders['train'].dataset))
+    print("Test accuracy: ", test/len(dataloaders['test'].dataset))
