@@ -2,9 +2,10 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
-
+from PIL import Image
 class SequenceDataset(Dataset):
-    def __init__(self,data,k):
+    def __init__(self,data,k,transforms):
+        self.transforms=transforms
         indices=torch.empty(k, len(data), dtype=torch.int64)
         for i in range(k):
             indices[i]=torch.randperm(len(data))
@@ -13,10 +14,16 @@ class SequenceDataset(Dataset):
 
     def __len__(self):
         return len(self.data)
-    def __getitem(self, idx):
-        return self.data[idx], self.label[idx]
+    def __getitem__(self, idx):
+        img=self.data[idx]
+        target=self.targets[idx]
+        img = Image.fromarray(img.numpy(), mode="L")
+        if self.transforms is not None:
+            img = self.transforms(img)
+
+        return img, target.float()
 
 def get_dataloaders(k, batch_size):
-    datasets={"train": datasets.MNIST(root="data", train=True, download=True), "test": datasets.MNIST(root="data", train=False, download=True)}
-    dataloaders={"train": DataLoader(SequenceDataset(datasets['train'], k), batch_size=batch_size), "test": DataLoader(SequenceDataset(datasets['test'], k), batch_size=batch_size)}
+    data={"train": datasets.MNIST(root="data", train=True, download=True), "test": datasets.MNIST(root="data", train=False, download=True)}
+    dataloaders={"train": DataLoader(SequenceDataset(data['train'], k, transforms.ToTensor()), batch_size=batch_size), "test": DataLoader(SequenceDataset(data['test'], k, transforms.ToTensor()), batch_size=batch_size)}
     return dataloaders
