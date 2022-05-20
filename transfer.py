@@ -1,4 +1,4 @@
-from models import TwoLayer, Classifier
+from models import TwoLayer, Classifier, FourLayer, LeNet
 from data import get_dataloaders
 import torch
 
@@ -6,21 +6,22 @@ n_epochs=20
 k=3
 bs=128
 
-model=TwoLayer(k)
-model.load_state_dict(torch.load("trained_models/task1.pt"))
+model=LeNet(k)
+model.load_state_dict(torch.load("trained_models/LeNet.pt"))
 
 classifier=Classifier(model)
 
 
-dataloaders=get_dataloaders(k, bs, transfer=True)
+dataloaders=get_dataloaders(k, bs)
 loss=torch.nn.CrossEntropyLoss()
-optimizer=torch.optim.Adam(model.parameters(), lr=0.001)
+optimizer=torch.optim.Adam(model.parameters(), lr=0.01)
 
 
 for epoch in range(n_epochs):
     train=0
     test=0
     print("Epoch: ", epoch)
+    dataloaders=get_dataloaders(k, bs)
     for x,_,y in dataloaders['train']:
         out=classifier(x)
         l=loss(out, y)

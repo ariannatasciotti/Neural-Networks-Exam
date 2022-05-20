@@ -1,4 +1,4 @@
-from models import TwoLayer, LeNet
+from models import TwoLayer, LeNet, FourLayer
 from data import get_dataloaders
 import torch
 
@@ -9,12 +9,13 @@ bs=128
 model=LeNet(k)
 dataloaders=get_dataloaders(k, bs)
 loss=torch.nn.BCELoss()
-optimizer=torch.optim.Adadelta(model.parameters(), lr=0.5)
+optimizer=torch.optim.Adadelta(model.parameters(), lr=0.3)
 
 
 for epoch in range(n_epochs):
     train=0
     test=0
+    dataloaders=get_dataloaders(k, bs)
     print("Epoch: ", epoch)
     for x,y,_ in dataloaders['train']:
         out=torch.sigmoid(model(x)).reshape(-1)
@@ -30,4 +31,4 @@ for epoch in range(n_epochs):
     print("Test accuracy: ", test/len(dataloaders['test'].dataset))
 
 
-torch.save(model.state_dict(), "trained_models/task1.pt")
+torch.save(model.state_dict(), "trained_models/LeNet.pt")
