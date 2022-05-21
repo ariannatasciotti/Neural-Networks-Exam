@@ -20,8 +20,8 @@ optimizer=torch.optim.Adam(model.parameters(), lr=0.01)
 for epoch in range(n_epochs):
     train=0
     test=0
-    print("Epoch: ", epoch)
     dataloaders=get_dataloaders(k, bs)
+    print("Epoch: ", epoch)
     for x,_,y in dataloaders['train']:
         out=classifier(x)
         l=loss(out, y)

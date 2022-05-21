@@ -6,9 +6,10 @@ n_epochs=20
 k=3
 bs=128
 
-model=LeNet(k)
+model=TwoLayer(k)
 dataloaders=get_dataloaders(k, bs)
 loss=torch.nn.BCELoss()
+#loss=torch.nn.CrossEntropyLoss()
 optimizer=torch.optim.Adadelta(model.parameters(), lr=0.3)
 
 
@@ -30,5 +31,4 @@ for epoch in range(n_epochs):
     print("Train accuracy: ", train/len(dataloaders['train'].dataset))
     print("Test accuracy: ", test/len(dataloaders['test'].dataset))
 
-
-torch.save(model.state_dict(), "trained_models/LeNet.pt")
+torch.save(model.state_dict(), "trained_models/twolayer.pt")

@@ -6,7 +6,7 @@ class TwoLayer(nn.Module):
         super().__init__()
         self.k=k
         self.layer1=nn.Linear(28*28*k, 512)
-        self.last_layer=nn.Linear(512,1)
+        self.last_layer=nn.Linear(512,1) 
         self.activation=nn.ReLU()
 
     def forward(self, x):
