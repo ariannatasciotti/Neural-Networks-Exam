@@ -1,7 +1,8 @@
 import numpy as np
 from sklearn.cross_decomposition import CCA
+import matplotlib.pyplot as plt
 
-def svd(M):
+def svd_reduction(M):
     M-=np.mean(M, axis=1, keepdims=True)
     U,s,V=np.linalg.svd(M, full_matrices=False)
     sv_sum = np.sum(s)
@@ -11,28 +12,27 @@ def svd(M):
         i += 1
         quality_ratio = np.sum(s[:i])/sv_sum
 
-    M_reduced = np.dot(s[:i]*np.eye(i), V[:i])
+    M_reduced = np.dot(U[:, :i], s[:i]*np.eye(i))
+    print(M_reduced.shape)
 
-    return M_reduced.T
+    return M_reduced
 
-def cca(M1,M2):
+def cca(M1,M2): #shape is datapoints x features
     n_comps = min(M1.shape[1], M2.shape[1])
-    cca = CCA(n_components=n_comps, tol=1e-5)
+    cca = CCA(n_components=n_comps)
     cca.fit(M1, M2)
     M1_scores, M2_scores = cca.transform(M1, M2)
-    corrs = [np.corrcoef(M1_scores[:, i], M2_scores[:, i])[0, 1] for i in range(n_comps)]  
-
+    corrs = np.array([np.corrcoef(M1_scores[:, i], M2_scores[:, i])[0, 1] for i in range(n_comps)])
     final_score = sum(corrs)/n_comps
-    return final_score
+    return final_score, corrs
 
+def svcca(M1, M2):
+    M1=svd_reduction(M1)
+    M2=svd_reduction(M2)
+    return cca(M1, M2)
+    
+a = np.random.randn(2000,50)
+b = np.random.randn(2000,100)
 
-a = np.random.rand(500,100)
-b = np.random.rand(500,100)
-
-ar = svd(a)
-br = svd(b)
-print(ar.shape,br.shape,cca(ar,br))
-
-
-# non sono sicura di aver capito cosa torna "fit" e "transform" di sklearn.cca, la linea 23 dovrebbe tornare i fantomatici
-# rho di cui si parla nel paper e per il final score ho provato a fare sta media 
+print(cca(a, b))
+print(cca(svd_reduction(a), svd_reduction(b)))
