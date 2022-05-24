@@ -6,12 +6,16 @@ class TwoLayer(nn.Module):
         super().__init__()
         self.k=k
         self.layer1=nn.Linear(28*28*k, 512)
-        self.last_layer=nn.Linear(512,1) 
+        self.last_layer=nn.Linear(512,1)
         self.activation=nn.ReLU()
 
-    def forward(self, x):
+    def extract_representation(self, x):
         x=x.view(-1,28*28*self.k)
         x=self.activation(self.layer1(x))
+        return x
+
+    def forward(self, x):
+        x=extract_representation(x)
         x=self.last_layer(x)
         return x
 
@@ -25,11 +29,14 @@ class FourLayer(nn.Module):
         self.last_layer=nn.Linear(128,1)
         self.activation=nn.ReLU()
 
-    def forward(self, x):
+    def extract_representation(self, x):
         x=x.view(-1,28*28*self.k)
         x=self.activation(self.layer1(x))
         x=self.activation(self.layer2(x))
         x=self.activation(self.layer3(x))
+        return x
+    def forward(self, x):
+        x=extract_representation(x)
         x=self.last_layer(x)
         return x
 
@@ -45,12 +52,15 @@ class LeNet(nn.Module):
         self.last_layer=nn.Linear(84,1)
         self.activation=nn.ReLU()
 
-    def forward(self, x):
+    def extract_representation(self, x):
         x=self.pool(self.activation(self.conv1(x)))
         x=self.pool(self.activation(self.conv2(x)))
         x=torch.flatten(x,1)
         x=self.activation(self.layer1(x))
         x=self.activation(self.layer2(x))
+        return x
+    def forward(self, x):
+        x=self.extract_representation(x)
         x=self.last_layer(x)
         return x
 
