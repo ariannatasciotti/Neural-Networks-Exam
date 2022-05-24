@@ -1,23 +1,14 @@
 from models import TwoLayer, LeNet, FourLayer, Classifier
 from data import get_dataloaders
 import torch
-import csv
+import pandas as pd
 
 n_epochs=20
 k=3
 bs=128
-
-model=TwoLayer(k)
-#classifier=Classifier(model)
-
 lr=0.3
-optimizer1=torch.optim.AdamW(model.parameters(), lr=lr)
-
 lambda1 = lambda epoch: 0.99 ** epoch
-scheduler1=torch.optim.lr_scheduler.LambdaLR(optimizer1, lr_lambda=lambda1)
-
-train_accuracy=list()
-test_accuracy=list()
+accuracy = dict()
 
 def train(model, n_epochs, optimizer, scheduler=None):
     loss=torch.nn.BCELoss()
@@ -38,8 +29,8 @@ def train(model, n_epochs, optimizer, scheduler=None):
         for x,y,_ in dataloaders['test']:
             out=torch.sigmoid(model(x)).reshape(-1)
             test+=(out.round()==y).sum()
-        test_accuracy.append(round(test.item()/len(dataloaders['test'].dataset),2))
-        train_accuracy.append(round(train.item()/len(dataloaders['train'].dataset),2))
+        accuracy.setdefault('train accuracy',[]).append(round(train.item()/len(dataloaders['train'].dataset),4))
+        accuracy.setdefault('test accuracy',[]).append(round(test.item()/len(dataloaders['test'].dataset),4))
         print("Train accuracy: ", train/len(dataloaders['train'].dataset))
         print("Test accuracy: ", test/len(dataloaders['test'].dataset))
 
@@ -62,8 +53,8 @@ def train_tenclass(model, n_epochs, optimizer, scheduler=None):
         for x,_,y in dataloaders['test']:
             out=classifier(x)
             test+=(torch.argmax(out,axis=1)==y).sum()
-        test_accuracy.append(round(test.item()/len(dataloaders['test'].dataset),4))
-        train_accuracy.append(round(train.item()/len(dataloaders['train'].dataset),4))
+        accuracy.setdefault('train accuracy',[]).append(round(train.item()/len(dataloaders['train'].dataset),4))
+        accuracy.setdefault('test accuracy',[]).append(round(test.item()/len(dataloaders['test'].dataset),4))
         print("Train accuracy: ", train/len(dataloaders['train'].dataset))
         print("Test accuracy: ", test/len(dataloaders['test'].dataset))
 
@@ -72,8 +63,15 @@ def train_tenclass(model, n_epochs, optimizer, scheduler=None):
 task='parity_task'
 
 if task=='parity_task':
+    model=TwoLayer(k)
+    optimizer1=torch.optim.SGD(model.parameters(), lr=lr)
+    scheduler1=torch.optim.lr_scheduler.LambdaLR(optimizer1, lr_lambda=lambda1)
     train(model, n_epochs, optimizer1)
 else:
+    model=TwoLayer(k)
+    classifier=Classifier(model)
+    optimizer1=torch.optim.SGD(model.parameters(), lr=lr)
+    scheduler1=torch.optim.lr_scheduler.LambdaLR(optimizer1, lr_lambda=lambda1)
     train_tenclass(classifier, n_epochs, optimizer1)
 
 #path = str(model._get_name()) + "_"  + task + "_" + str(type(optimizer1).__name__) + "_" + str(type(scheduler1).__name__)
@@ -81,7 +79,6 @@ path = str(model._get_name()) + "_"  + task + "_" + str(type(optimizer1).__name_
 torch.save(model.state_dict(), "trained_models/" + str(path) + ".pt")
 
 
-with open('accuracy/' + str(path) +  ".csv", "w") as f:
-    writer = csv.writer(f, escapechar=' ')
-    writer.writerow(('Train Accuracy', 'Test Accuracy'))
-    writer.writerow([train_accuracy, test_accuracy])
+df = pd.DataFrame(accuracy)
+df.to_csv('accuracy/' + str(path) +  ".csv", index=False)
+
