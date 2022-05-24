@@ -15,7 +15,7 @@ class TwoLayer(nn.Module):
         return x
 
     def forward(self, x):
-        x=extract_representation(x)
+        x=self.extract_representation(x)
         x=self.last_layer(x)
         return x
 
@@ -35,8 +35,9 @@ class FourLayer(nn.Module):
         x=self.activation(self.layer2(x))
         x=self.activation(self.layer3(x))
         return x
+
     def forward(self, x):
-        x=extract_representation(x)
+        x=self.extract_representation(x)
         x=self.last_layer(x)
         return x
 
