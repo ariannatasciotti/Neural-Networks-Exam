@@ -65,9 +65,10 @@ class LeNet(nn.Module):
         x=self.last_layer(x)
         return x
 
-def Classifier(parity_model):
+def Classifier(parity_model, transfer=True):
     parity_model.last_layer=nn.Linear(parity_model.last_layer.in_features, 10)
-    for name, weight in parity_model.named_parameters():
-        if not name.startswith('last_layer'):
-            weight.requires_grad=False
+    if transfer:
+        for name, weight in parity_model.named_parameters():
+            if not name.startswith('last_layer'):
+                weight.requires_grad=False
     return parity_model

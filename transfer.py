@@ -1,36 +1,22 @@
 from models import TwoLayer, Classifier, FourLayer, LeNet
 from data import get_dataloaders
 import torch
+from train import train_tenclass
+import pandas as pd
 
 n_epochs=20
 k=3
 bs=128
 
-model=LeNet(k)
-model.load_state_dict(torch.load("trained_models/LeNet.pt"))
+for model in [LeNet(k)]:
+    path="trained_models/"+str(model._get_name()) + "_parity_task_k_"+str(k)+ "_Adadelta.pt"
+    model.load_state_dict(torch.load(path))
+    classifier=Classifier(model)
+    optimizer=torch.optim.Adam(classifier.parameters(), lr=0.01)
+    accuracy=train_tenclass(classifier, bs, k, n_epochs, optimizer)
 
-classifier=Classifier(model)
+    path = str(model._get_name()) + "_transfer_classification_k_"+str(k)+ "_" + str(type(optimizer).__name__)
+    torch.save(model.state_dict(), "trained_models/" + str(path) + ".pt")
 
-
-dataloaders=get_dataloaders(k, bs)
-loss=torch.nn.CrossEntropyLoss()
-optimizer=torch.optim.Adam(model.parameters(), lr=0.01)
-
-
-for epoch in range(n_epochs):
-    train=0
-    test=0
-    dataloaders=get_dataloaders(k, bs)
-    print("Epoch: ", epoch)
-    for x,_,y in dataloaders['train']:
-        out=classifier(x)
-        l=loss(out, y)
-        optimizer.zero_grad()
-        l.backward()
-        optimizer.step()
-        train+=(torch.argmax(out,axis=1)==y).sum()
-    for x,_,y in dataloaders['test']:
-        out=classifier(x)
-        test+=(torch.argmax(out,axis=1)==y).sum()
-    print("Train accuracy: ", train/len(dataloaders['train'].dataset))
-    print("Test accuracy: ", test/len(dataloaders['test'].dataset))
+    df = pd.DataFrame(accuracy)
+    df.to_csv('accuracy/' + str(path) +  ".csv", index=False)
