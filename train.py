@@ -5,11 +5,9 @@ import pandas as pd
 
 
 n_epochs=20
-k=3
 bs=128
 lr=0.3
-lambda1 = lambda epoch: 0.99 ** epoch
-accuracy = dict()
+
 
 def train(model, n_epochs, optimizer, scheduler=None):
     loss=torch.nn.BCELoss()
@@ -28,7 +26,7 @@ def train(model, n_epochs, optimizer, scheduler=None):
         if scheduler is not None:
             scheduler.step()
         for x,y,_ in dataloaders['test']:
-            hidden['epoch_' + str(epoch)]=model.extract_representation(x)
+            #hidden['epoch_' + str(epoch)]=model.extract_representation(x)
             out=torch.sigmoid(model(x)).reshape(-1)
             test+=(out.round()==y).sum()
         accuracy.setdefault('train accuracy',[]).append(round(train.item()/len(dataloaders['train'].dataset),4))
@@ -61,26 +59,25 @@ def train_tenclass(model, n_epochs, optimizer, scheduler=None):
         print("Test accuracy: ", test/len(dataloaders['test'].dataset))
 
 
-task='ten_class'
-
-if task=='parity_task':
-    model=TwoLayer(k)
-    optimizer1=torch.optim.Adadelta(model.parameters(), lr=lr)
-    scheduler1=torch.optim.lr_scheduler.LambdaLR(optimizer1, lr_lambda=lambda1)
-    train(model, n_epochs, optimizer1)
-else:
-    model=TwoLayer(k)
-    classifier=Classifier(model)
-    optimizer1=torch.optim.Adadelta(model.parameters(), lr=lr)
-    scheduler1=torch.optim.lr_scheduler.LambdaLR(optimizer1, lr_lambda=lambda1)
-    train_tenclass(classifier, n_epochs, optimizer1)
-
-
-#path = str(model._get_name()) + "_"  + task + "_" + str(type(optimizer1).__name__) + "_" + str(type(scheduler1).__name__)
-path = str(model._get_name()) + "_"  + task + "_" + str(type(optimizer1).__name__)
-torch.save(model.state_dict(), "trained_models/" + str(path) + ".pt")
+task='parity_task'
+for k in range(1,5):
+    accuracy = dict()
+    print(k)
+    if task=='parity_task':
+        model=FourLayer(k)
+        optimizer1=torch.optim.Adadelta(model.parameters(), lr=lr)
+        train(model, n_epochs, optimizer1)
+    else:
+        model=TwoLayer(k)
+        classifier=Classifier(model)
+        optimizer1=torch.optim.Adadelta(model.parameters(), lr=lr)
+        train_tenclass(classifier, n_epochs, optimizer1)
 
 
-df = pd.DataFrame(accuracy)
-df.to_csv('accuracy/' + str(path) +  ".csv", index=False)
+    #path = str(model._get_name()) + "_"  + task + "_" + str(type(optimizer1).__name__) + "_" + str(type(scheduler1).__name__)
+    path = str(model._get_name()) + "_"  + task + "_k_"+str(k)+ "_" + str(type(optimizer1).__name__)
+    torch.save(model.state_dict(), "trained_models/" + str(path) + ".pt")
 
+
+    df = pd.DataFrame(accuracy)
+    df.to_csv('accuracy/' + str(path) +  ".csv", index=False)
