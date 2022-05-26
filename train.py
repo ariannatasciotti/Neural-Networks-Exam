@@ -66,17 +66,16 @@ def main():
     lr=0.01
     task='classification'
     for k in range(3,4):
-        accuracy = dict()
         print(k)
         if task=='parity_task':
             model=LeNet(k)
             optimizer1=torch.optim.Adadelta(model.parameters(), lr=lr)
             train(model, bs, k, n_epochs, optimizer)
         else:
-            model=FourLayer(k)
+            model=TwoLayer(k)
             classifier=Classifier(model, transfer=False)
             optimizer=torch.optim.Adam(classifier.parameters(), lr=lr)
-            train_tenclass(classifier, bs, k, n_epochs, optimizer)
+            accuracy=train_tenclass(classifier, bs, k, n_epochs, optimizer)
 
 
         #path = str(model._get_name()) + "_"  + task + "_" + str(type(optimizer1).__name__) + "_" + str(type(scheduler1).__name__)
